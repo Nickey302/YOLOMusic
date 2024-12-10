@@ -37,6 +37,8 @@ from pathlib import Path
 
 import torch
 
+from sc_osc import SuperColliderClient
+
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
 if str(ROOT) not in sys.path:
@@ -161,6 +163,9 @@ def run(
     save_dir = increment_path(Path(project) / name, exist_ok=exist_ok)  # increment run
     (save_dir / "labels" if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
+    # SuperCollider 통신 클라이언트 초기화
+    sc_client = SuperColliderClient(ip="127.0.0.1", port=57120)
+
     # Load model
     device = select_device(device)
     model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)
@@ -253,12 +258,14 @@ def run(
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
                     c = int(cls)  # integer class
-                    label = names[c] if hide_conf else f"{names[c]}"
+                    label = names[c]  # 클래스 이름만 가져오기
                     confidence = float(conf)
-                    confidence_str = f"{confidence:.2f}"
+                    
+                    # SuperCollider로 탐지 결과 전송
+                    sc_client.send_message(label, confidence)
 
                     if save_csv:
-                        write_to_csv(p.name, label, confidence_str)
+                        write_to_csv(p.name, label, confidence)
 
                     if save_txt:  # Write to file
                         if save_format == 0:

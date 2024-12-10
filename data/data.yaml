@@ -1,0 +1,11 @@
+train: ../train/images
+val: ../train/images
+
+nc: 7
+names: ['fist',
+        'one',
+        'two',
+        'three',
+        'four',
+        'five',
+        'y']
